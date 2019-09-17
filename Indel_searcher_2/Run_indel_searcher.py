@@ -332,7 +332,7 @@ def Main():
                 strSample, strRef, strExpCtrl = tupSampleInfo
 
                 InstRunner = clsIndelSearcherRunner(strSample, strRef, options, InstInitFolder)
-                """
+                #"""
                 logging.info('SplitFile')
                 InstRunner.SplitFile()
                 logging.info('MakeReference')
@@ -345,7 +345,7 @@ def Main():
                 InstRunner.MakeOutput()
                 logging.info('RunIndelFreqCalculator')
                 InstRunner.RunIndelFreqCalculator()
-                """
+                #"""
             InstRunner.IndelNormalization()
             #"""
 
