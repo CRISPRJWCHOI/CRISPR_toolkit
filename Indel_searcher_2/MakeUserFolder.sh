@@ -3,6 +3,10 @@
 user=JaeWoo
 project=JaeWoo_test_samples
 
+
+[ ! -d ./Input ] && { `mkdir ./Input`; }
+[ ! -d ./User ] && { `mkdir ./User`; }
+
 [ ! -d ./Input/${user} ] && { `mkdir ./Input/${user}`; }
 [ ! -d ./Input/${user}/FASTQ ] && { `mkdir ./Input/${user}/FASTQ`; }
 [ ! -d ./Input/${user}/FASTQ/${project} ] && { `mkdir ./Input/${user}/FASTQ/${project}`; }
