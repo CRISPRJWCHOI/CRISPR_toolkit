@@ -214,16 +214,21 @@ def SplitSampleInfo(strSample):
     logging.info('Processing sample : %s' % strSample)
     lSampleRef = strSample.replace('\n', '').replace('\r', '').replace(' ', '').split('\t')
 
-    try:
+    if len(lSampleRef) == 2:
+        strSample  = lSampleRef[0]
+        strRef     = lSampleRef[1]
+        return (strSample, strRef, '')
+
+    elif len(lSampleRef) == 3:
         strSample  = lSampleRef[0]
         strRef     = lSampleRef[1]
         strExpCtrl = lSampleRef[2].upper()
-    except IndexError as e:
-        logging.error('Confirm the file format is correct. -> Sample name\tReference name')
-        logging.error('Sample list input : %s\n' % lSampleRef)
-        logging.error(e, exc_info=True)
+        return (strSample, strRef, strExpCtrl)
 
-    return (strSample, strRef, strExpCtrl)
+    else:
+        logging.error('Confirm the file format is correct. -> Sample name\tReference name\tGroup')
+        logging.error('Sample list input : %s\n' % lSampleRef)
+        raise Exception
 
 
 def AttachSeqToIndel(strSample, strBarcodeName, strIndelPos,
