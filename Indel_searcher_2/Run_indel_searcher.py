@@ -69,7 +69,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         for strFile in os.listdir(self.strSampleDir):
             if os.path.isfile(self.strSampleDir + '/' + strFile) and strFile.split('.')[-1] == 'fastq':
                 self.strFastq_name = '.'.join(strFile.split('.')[:-1])
-        print(self.strFastq_name)
+        logging.info('File name : %s' % self.strFastq_name)
 
         ## './Input/JaeWoo/FASTQ/Test_samples/Sample_1/Fastq_file.fastq'
         self.strInputFile = os.path.join(self.strSampleDir, self.strFastq_name+'.fastq')
@@ -325,11 +325,13 @@ def Main():
         @CheckProcessedFiles
         def RunPipeline(**kwargs):
 
+            setGroup = set()
             for strSample in listSamples:
 
                 tupSampleInfo = SplitSampleInfo(strSample)
                 if not tupSampleInfo: continue
                 strSample, strRef, strExpCtrl = tupSampleInfo
+                setGroup.add(strExpCtrl)
 
                 InstRunner = clsIndelSearcherRunner(strSample, strRef, options, InstInitFolder)
                 #"""
@@ -346,7 +348,16 @@ def Main():
                 logging.info('RunIndelFreqCalculator')
                 InstRunner.RunIndelFreqCalculator()
                 #"""
-            InstRunner.IndelNormalization()
+
+            if setGroup == {'EXP', 'CTRL'}:
+                InstRunner.IndelNormalization()
+            elif setGroup == {''}:
+                pass
+            else:
+                logging.error('The group category is not appropriate.')
+                logging.error('Please make sure your project file is correct.')
+                logging.error('The group category must be Exp or Ctrl')
+                raise Exception
             #"""
 
         RunPipeline(InstInitFolder=InstInitFolder,
