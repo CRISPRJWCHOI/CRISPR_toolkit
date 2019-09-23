@@ -335,10 +335,10 @@ def Main():
 
             if setGroup == {'EXP', 'CTRL'}:
                 InstRunner.IndelNormalization()
-            elif setGroup == {''}:
+            elif setGroup == {} or setGroup == set(['']):
                 pass
             else:
-                logging.error('The group category is not appropriate.')
+                logging.error('The group category is not appropriate. : %s' % setGroup)
                 logging.error('Please make sure your project file is correct.')
                 logging.error('The group category must be Exp or Ctrl')
                 raise Exception
@@ -347,6 +347,7 @@ def Main():
         RunPipeline(InstInitFolder=InstInitFolder,
                     strInputProject=strInputProject,
                     intProjectNumInTxt=intProjectNumInTxt,
+                    listSamples=listSamples,
                     logging=logging)
 
     logging.info('Program end')

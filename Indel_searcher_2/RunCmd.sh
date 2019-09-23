@@ -4,8 +4,8 @@
 ## User parameter ##
 ###################################
 
-user=Nahye
-project=190903_Nahye_12k_D0_2
+user=JaeWoo
+project=JaeWoo_test_samples
 pam_type=Cas9
 pam_pos=Forward
 thread=15
@@ -21,4 +21,4 @@ python=/media/hkim/Pipeline/Indel_searcher_2/miniconda2/bin/python
 [ ! -d ./Output/${user}/${project} ] && { `mkdir ./Output/${user}/${project}`; }
 [ ! -d ./Output/${user}/${project}/Log ] && { `mkdir ./Output/${user}/${project}/Log`; }
 
-$python ./Run_indel_searcher.py --python $python --user $user --project $project --ednafull $EDNAFULL --pam_type $pam_type --pam_pos $pam_pos -t $thread > ./Output/${user}/${project}/Log/log.txt 2>&1 &
+$python ./Run_indel_searcher.py --python $python --user $user --project $project --pam_type $pam_type --pam_pos $pam_pos #-t $thread > ./Output/${user}/${project}/Log/log.txt 2>&1 &
