@@ -279,7 +279,6 @@ def Main():
     parser.add_option('--project', dest='project_name', help='The project name with no space')
     parser.add_option('--pickle', dest='pickle', default='False', help='Dont remove the pickles in the tmp folder : True, False')
     parser.add_option('--classfied_FASTQ', dest='class_fastq', default='True', help='Dont remove the ClassfiedFASTQ in the tmp folder : True, False')
-    parser.add_option('--ednafull', dest='ednafull', help='The nucleotide alignment matrix')
 
     options, args = parser.parse_args()
 

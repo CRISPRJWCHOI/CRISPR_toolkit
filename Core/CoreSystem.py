@@ -175,7 +175,6 @@ class UserFolderAdmin(object):
         self.strGapOpen   = options.gap_open    # CRISPresso aligner option
         self.strGapExtend = options.gap_extend  # 
         self.strPython    = options.python
-        self.strEdnafull  = options.ednafull
 
         self.strOutProjectDir = ''
         self.strOutSampleDir  = ''
