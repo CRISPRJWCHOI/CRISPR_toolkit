@@ -1,0 +1,6 @@
+#190819_Nahye_12K_D4_eCas9_Rep1-Cas9D7	Cas9D7
+#190819_Nahye_12K_D4_eCas9_Rep2-Cas9D7	Cas9D7
+Test_sample	Cas9D7
+#190819_Nahye_12K_D4_D0_1-Cas9D7	Cas9D7
+#190819_Nahye_12K_D7_2_D0_1-Cas9D7	Cas9D7
+#190819_Nahye_12K_D7_D0_1-Cas9D7	Cas9D7	
