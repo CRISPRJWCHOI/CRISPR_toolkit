@@ -1,4 +1,4 @@
-import os, sys, logging
+import os, re, sys, logging
 import subprocess as sp
 import multiprocessing as mp
 
@@ -22,11 +22,17 @@ class Helper(object):
         return listSamples
 
     @staticmethod ## defensive
-    def CheckSameNum(strInputProject, intProjectNumInTxt):
+    def CheckSameNum(strInputProject, listSamples):
 
-        intProjectNumInInput = len([i for i in sp.check_output('ls %s' % strInputProject, shell=True).split('\n') if i != ''])
+        listProjectNumInInput = [i for i in sp.check_output('ls %s' % strInputProject, shell=True).split('\n') if i != '']
 
-        if intProjectNumInInput != intProjectNumInTxt:
+        setSamples           = set(listSamples)
+        setProjectNumInInput = set(listProjectNumInInput)
+
+        intProjectNumInTxt    = len(listSamples)
+        intProjectNumInInput  = len(listProjectNumInInput)
+
+        if intProjectNumInTxt != len(setSamples - setProjectNumInInput):
             logging.warning('The number of samples in the input folder and in the project list does not matched.')
             logging.warning('Input folder: %s, Project list samples: %s' % (intProjectNumInInput, intProjectNumInTxt))
             raise AssertionError
@@ -34,21 +40,57 @@ class Helper(object):
             logging.info('The file list is correct, pass\n')
 
     @staticmethod ## defensive
-    def CheckAllDone(strOutputProject, intProjectNumInTxt):
+    def CheckAllDone(strOutputProject, listSamples):
         intProjectNumInOutput = len([i for i in sp.check_output('ls %s' % strOutputProject, shell=True).split('\n') if i not in ['All_results', 'Log', '']])
 
-        if intProjectNumInOutput != intProjectNumInTxt:
+        if intProjectNumInOutput != len(listSamples):
             logging.warning('The number of samples in the output folder and in the project list does not matched.')
-            logging.warning('Output folder: %s, Project list samples: %s\n' % (intProjectNumInOutput, intProjectNumInTxt))
+            logging.warning('Output folder: %s, Project list samples: %s\n' % (intProjectNumInOutput, len(listSamples)))
         else:
             logging.info('All output folders have been created.\n')
+
+    @staticmethod
+    def SplitSampleInfo(strSample):
+
+        if strSample[0] == '#': return False
+        logging.info('Processing sample : %s' % strSample)
+        lSampleRef = strSample.replace('\n', '').replace('\r', '').replace(' ', '').split('\t')
+
+        if len(lSampleRef) == 2:
+            strSample = lSampleRef[0]
+            strRef = lSampleRef[1]
+            return (strSample, strRef, '')
+
+        elif len(lSampleRef) == 3:
+            strSample = lSampleRef[0]
+            strRef = lSampleRef[1]
+            strExpCtrl = lSampleRef[2].upper()
+            return (strSample, strRef, strExpCtrl)
+
+        else:
+            logging.error('Confirm the file format is correct. -> Sample name\tReference name\tGroup')
+            logging.error('Sample list input : %s\n' % lSampleRef)
+            raise Exception
+
+    @staticmethod
+    def CheckIntegrity(strBarcodeFile, strSeq): ## defensive
+        rec = re.compile(r'[A|C|G|T|N]')
+
+        if ':' in strSeq:
+            strSeq = strSeq.split(':')[1]
+
+        strNucle = re.findall(rec, strSeq)
+        if len(strNucle) != len(strSeq):
+            logging.error('This sequence is not suitable, check A,C,G,T,N are used only : %s' % strBarcodeFile)
+            sys.exit(1)
 
 
 class InitialFolder(object):
 
-    def __init__(self, strUser, strProject):
+    def __init__(self, strUser, strProject, strProgram):
         self.strUser    = strUser
         self.strProject = strProject
+        self.strProgram = strProgram
 
     def MakeDefaultFolder(self):
         Helper.MakeFolderIfNot('Input')
@@ -60,9 +102,17 @@ class InitialFolder(object):
         strUserInputDir = './Input/{user}'.format(user=self.strUser)
         Helper.MakeFolderIfNot(strUserInputDir)
 
-        ## './Input/JaeWoo/FASTQ'
-        strUserFastqDir = os.path.join(strUserInputDir, 'FASTQ')
-        Helper.MakeFolderIfNot(strUserFastqDir)
+        if self.strProgram == 'Run_indel_searcher.py':
+            ## './Input/JaeWoo/FASTQ'
+            strUserFastqDir = os.path.join(strUserInputDir, 'FASTQ')
+            Helper.MakeFolderIfNot(strUserFastqDir)
+        elif self.strProgram == 'Run_BaseEdit_freq.py':
+            ## './Input/JaeWoo/Query'
+            strUserFastqDir = os.path.join(strUserInputDir, 'Query')
+            Helper.MakeFolderIfNot(strUserFastqDir)
+        else:
+            print('CoreSystem.py -> CoreSystem error, check the script.')
+            raise Exception
 
         ## './Input/JaeWoo/FASTQ/Test_samples'
         strUserProjectDir = os.path.join(strUserFastqDir, self.strProject)
@@ -129,6 +179,7 @@ class UserFolderAdmin(object):
 
         self.strOutProjectDir = ''
         self.strOutSampleDir  = ''
+        self.strRefDir        = ''
 
     def MakeSampleFolder(self):
 
@@ -152,6 +203,10 @@ class UserFolderAdmin(object):
         strAllResultDir = os.path.join(self.strOutProjectDir, 'All_results')
         Helper.MakeFolderIfNot(strAllResultDir)
 
+        self.strRefDir = './Input/{user}/Reference/{project}/{ref}'.format(user=self.strUser,
+                                                                           project=self.strProject,
+                                                                           ref=self.strRef)
+
 
 class CoreHash(object):
 
@@ -171,10 +226,10 @@ class CoreHash(object):
 
 class CoreGotoh(object):
 
-    def __init__(self, strEDNAFULL='', strOg='', strOe=''):
-        self.npAlnMatrix     = CRISPResso2Align.read_matrix(strEDNAFULL)
-        self.strOg           = strOg
-        self.strOe           = strOe
+    def __init__(self, strEDNAFULL='', floOg='', floOe=''):
+        self.npAlnMatrix = CRISPResso2Align.read_matrix(strEDNAFULL)
+        self.floOg       = floOg
+        self.floOe       = floOe
 
     def GapIncentive(self, strRefSeqAfterBarcode):
         ## cripsress no incentive == gotoh
@@ -184,7 +239,7 @@ class CoreGotoh(object):
 
     def RunCRISPResso2(self, strQuerySeqAfterBarcode, strRefSeqAfterBarcode, npGapIncentive):
         listResult = CRISPResso2Align.global_align(strQuerySeqAfterBarcode.upper(), strRefSeqAfterBarcode.upper(),
-                                                  matrix=self.npAlnMatrix, gap_open=self.strOg, gap_extend=self.strOe,
+                                                  matrix=self.npAlnMatrix, gap_open=self.floOg, gap_extend=self.floOe,
                                                   gap_incentive=npGapIncentive)
         return listResult
 
@@ -194,41 +249,18 @@ def CheckProcessedFiles(Func):
 
         InstInitFolder     = kwargs['InstInitFolder']
         strInputProject    = kwargs['strInputProject']
-        intProjectNumInTxt = kwargs['intProjectNumInTxt']
+        listSamples        = kwargs['listSamples']
         logging            = kwargs['logging']
 
         logging.info('File num check: input folder and project list')
-        Helper.CheckSameNum(strInputProject, intProjectNumInTxt)
+        Helper.CheckSameNum(strInputProject, listSamples)
 
         Func(**kwargs)
 
         logging.info('Check that all folder are well created.')
-        Helper.CheckAllDone(InstInitFolder.strOutputProjectDir, intProjectNumInTxt)
+        Helper.CheckAllDone(InstInitFolder.strOutputProjectDir, listSamples)
 
     return Wrapped_func
-
-
-def SplitSampleInfo(strSample):
-
-    if strSample[0] == '#': return False
-    logging.info('Processing sample : %s' % strSample)
-    lSampleRef = strSample.replace('\n', '').replace('\r', '').replace(' ', '').split('\t')
-
-    if len(lSampleRef) == 2:
-        strSample  = lSampleRef[0]
-        strRef     = lSampleRef[1]
-        return (strSample, strRef, '')
-
-    elif len(lSampleRef) == 3:
-        strSample  = lSampleRef[0]
-        strRef     = lSampleRef[1]
-        strExpCtrl = lSampleRef[2].upper()
-        return (strSample, strRef, strExpCtrl)
-
-    else:
-        logging.error('Confirm the file format is correct. -> Sample name\tReference name\tGroup')
-        logging.error('Sample list input : %s\n' % lSampleRef)
-        raise Exception
 
 
 def AttachSeqToIndel(strSample, strBarcodeName, strIndelPos,
