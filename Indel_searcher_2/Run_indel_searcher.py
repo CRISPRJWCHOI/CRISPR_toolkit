@@ -2,14 +2,13 @@ import os, re, sys, math, logging
 
 import cPickle as pickle
 import subprocess as sp
-import multiprocessing as mp
 
 from pdb import set_trace
 from datetime import datetime
 from optparse import OptionParser
 
 sys.path.insert(0, os.path.dirname(os.getcwd()))
-from Core.CoreSystem import InitialFolder, UserFolderAdmin, Helper, RunMulticore, CheckProcessedFiles, SplitSampleInfo
+from Core.CoreSystem import InitialFolder, UserFolderAdmin, Helper, RunMulticore, CheckProcessedFiles
 
 
 class clsIndelSearcherRunner(UserFolderAdmin):
@@ -33,29 +32,26 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         self.strClassFASTQ     = options.class_fastq
         self.strLogPath        = InstInitFolder.strLogPath
 
-        self.strRefDir        = './Input/{user}/Reference/{project}/{ref}/'.format(user=self.strUser,
-                                                                                  project=self.strProject,
-                                                                                  ref=self.strRef)
-        self.strBarcode      = self.strRefDir + 'Barcode.txt'
-        self.strReferenceSeq = self.strRefDir + 'Reference_sequence.txt'
-        self.strTargetSeq    = self.strRefDir + 'Target_region.txt'
-        self.strRefPath      = self.strRefDir + 'Reference.fa'
+        self.strBarcodeFile      = os.path.join(self.strRefDir, 'Barcode.txt')
+        self.strReferenceSeqFile = os.path.join(self.strRefDir, 'Reference_sequence.txt')
+        self.strTargetSeqFile    = os.path.join(self.strRefDir, 'Target_region.txt')
+        self.strRefFile          = os.path.join(self.strRefDir, 'Reference.fa')
 
         ## The file name required for the user is 'B'arcode.txt but it may be written as 'b'arcode.txt by mistake.
         ## This part is to fix the situation as mentioned above.
-        if not os.path.isfile(self.strBarcode):
+        if not os.path.isfile(self.strBarcodeFile):
             if os.path.isfile(self.strRefDir + 'barcode.txt'):
-                self.strBarcode = self.strRefDir + 'barcode.txt'
+                self.strBarcodeFile = self.strRefDir + 'barcode.txt'
             else:
                 logging.error('Barcode path is not correct, please make sure the path correctly.')
-        if not os.path.isfile(self.strReferenceSeq):
+        if not os.path.isfile(self.strReferenceSeqFile):
             if os.path.isfile(self.strRefDir + 'reference_sequence.txt'):
-                self.strReferenceSeq = self.strRefDir + 'reference_sequence.txt'
+                self.strReferenceSeqFile = self.strRefDir + 'reference_sequence.txt'
             else:
                 logging.error('Reference path is not correct, please make sure the path correctly.')
-        if not os.path.isfile(self.strTargetSeq):
+        if not os.path.isfile(self.strTargetSeqFile):
             if os.path.isfile(self.strRefDir + 'target_region.txt'):
-                self.strTargetSeq = self.strRefDir + 'target_region.txt'
+                self.strTargetSeqFile = self.strRefDir + 'target_region.txt'
             else:
                 logging.error('Target path is not correct, please make sure the path correctly.')
 
@@ -123,39 +119,27 @@ class clsIndelSearcherRunner(UserFolderAdmin):
             sys.exit(1)
 
     def MakeReference(self):
-        ####################### check whether the total line is all same. Bacore == Target == Ref
 
-        rec = re.compile(r'[A|C|G|T|N]') ## defensive
+        if not os.path.isfile(self.strRefFile):
+            with open(self.strBarcodeFile) as Barcode, \
+                open(self.strTargetSeqFile) as Target, \
+                open(self.strReferenceSeqFile) as Ref, \
+                open(self.strRefFile, 'w') as Output:
 
-        if not os.path.isfile(self.strRefPath):
-            with open(self.strBarcode) as Barcode, \
-                open(self.strTargetSeq) as Target, \
-                open(self.strReferenceSeq) as Ref, \
-                open(self.strRefPath, 'w') as Output:
-
-                listBarcode = Barcode.readlines()
-                listTarget  = Target.readlines()
-                listRef     = Ref.readlines()
-
-                #set_trace()
+                listBarcode = Helper.RemoveNullAndBadKeyword(Barcode)
+                listTarget  = Helper.RemoveNullAndBadKeyword(Target)
+                listRef     = Helper.RemoveNullAndBadKeyword(Ref)
 
                 ## defensive
                 assert len(listBarcode) == len(listTarget) == len(listRef), 'Barcode, Target and Reference must be a same row number.'
-
-                ## defensive
-                def _CheckIntegrity(self, strSeq):
-                    strNucle = re.findall(rec, strSeq)
-                    if len(strNucle) != len(strSeq):
-                        logging.error('This sequence is not suitable, check A,C,G,T,N are used only : %s' % self.strBarcode)
-                        sys.exit(1)
 
                 listName = []
                 for strBar, strTar in zip(listBarcode, listTarget):
                     strBar = strBar.replace('\n', '').replace('\r', '').strip().upper()
                     strTar = strTar.replace('\n', '').replace('\r', '').strip().upper()
 
-                    _CheckIntegrity(self, strBar) ## defensive
-                    _CheckIntegrity(self, strTar) ## defensive
+                    Helper.CheckIntegrity(self.strBarcodeFile, strBar) ## defensive
+                    Helper.CheckIntegrity(self.strBarcodeFile, strTar) ## defensive
 
                     listName.append(strBar + ':' + strTar + '\n')
                 
@@ -165,7 +149,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
 
     def MakeIndelSearcherCmd(self):
 
-        listCmd = []
+        listCmd    = []
         strReverse = 'None'
 
         with open(self.strInputList) as Input:
@@ -177,13 +161,13 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                 #    strReverse = self.strSplitPath + '/' + listFile[1]
 
                 listCmd.append(('{python} Indel_searcher_crispresso_hash.py {forw} {reve} {ref} {pair} {GapO} {GapE}' 
-                             ' {Insertion_win} {Deletion_win} {PAM_type} {PAM_pos} {Qual} {outdir} {ednafull} {logpath}').format(
+                             ' {Insertion_win} {Deletion_win} {PAM_type} {PAM_pos} {Qual} {outdir} {logpath}').format(
                         python=self.strPython,
-                        forw=strForward, reve=strReverse, ref=self.strRefPath, pair=self.strPair,
+                        forw=strForward, reve=strReverse, ref=self.strRefFile, pair=self.strPair,
                         GapO=self.strGapOpen, GapE=self.strGapExtend,
                         Insertion_win=self.intInsertionWin, Deletion_win=self.intDeletionWin,
                         PAM_type=self.strPamType, PAM_pos=self.strPamPos, Qual=self.strQualCutoff,
-                        outdir=self.strOutSampleDir, ednafull=self.strEdnafull, logpath=self.strLogPath))
+                        outdir=self.strOutSampleDir, logpath=self.strLogPath))
         return listCmd
 
     def RunIndelFreqCalculator(self):
@@ -284,8 +268,8 @@ def Main():
     parser.add_option('-c', '--chunk_number', default='400000', type='int', dest='chunk_number',
                       help='split FASTQ, must be multiples of 4. file size < 1G recommendation:40000, size > 1G recommendation:400000')
     parser.add_option('-q', '--base_quality', default='20', dest='base_quality', help='NGS read base quality')
-    parser.add_option('--gap_open', default='-10', dest='gap_open', help='gap open: -100~0')
-    parser.add_option('--gap_extend', default='1', dest='gap_extend', help='gap extend: 1~100')
+    parser.add_option('--gap_open', default='-10', type='float', dest='gap_open', help='gap open: -100~0')
+    parser.add_option('--gap_extend', default='1', type='float', dest='gap_extend', help='gap extend: 1~100')
     parser.add_option('-i', '--insertion_window', default='4', type='int', dest='insertion_window', help='a window size for insertions')
     parser.add_option('-d', '--deletion_window', default='4', type='int', dest='deletion_window', help='a window size for deletions')
     parser.add_option('--pam_type', dest='pam_type', help='PAM type: Cas9 Cpf1')
@@ -299,7 +283,7 @@ def Main():
 
     options, args = parser.parse_args()
 
-    InstInitFolder = InitialFolder(options.user_name, options.project_name)
+    InstInitFolder = InitialFolder(options.user_name, options.project_name, os.path.basename(__file__))
     InstInitFolder.MakeDefaultFolder()
     InstInitFolder.MakeInputFolder()
     InstInitFolder.MakeOutputFolder()
@@ -328,7 +312,7 @@ def Main():
             setGroup = set()
             for strSample in listSamples:
 
-                tupSampleInfo = SplitSampleInfo(strSample)
+                tupSampleInfo = Helper.SplitSampleInfo(strSample)
                 if not tupSampleInfo: continue
                 strSample, strRef, strExpCtrl = tupSampleInfo
                 setGroup.add(strExpCtrl)

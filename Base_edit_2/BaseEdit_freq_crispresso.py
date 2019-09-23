@@ -35,8 +35,8 @@ class clsParameter(object):
             self.strPamSeq          = sys.argv[11]
             self.listPamPos         = sys.argv[12].split('-')
             self.listGuidePos       = sys.argv[13].split('-')
-            self.strEDNAFULL        = sys.argv[14]
-            self.strLogPath         = sys.argv[15]
+            self.strLogPath         = sys.argv[14]
+            self.strEDNAFULL = os.path.abspath('../EDNAFULL')
 
         else:
             sManual = """
@@ -293,7 +293,7 @@ class clsBaseEditParser():
                 iBase_edit_event = 0
 
                 for i, tRef_Query_base in enumerate(zip(sRef_needle[iTarget_start: iTarget_end], sQuery_needle[iTarget_start: iTarget_end])):
-                    sRef_base = tRef_Query_base[0]
+                    sRef_base   = tRef_Query_base[0]
                     sQuery_base = tRef_Query_base[1]
 
                     if sRef_base == '-' or sQuery_base == '-': continue

@@ -20,9 +20,7 @@ gap_extend=1 ## default
 
 ###################################
 
-
 python=/media/hkim/Pipeline/Indel_searcher_2/miniconda2/bin/python
-EDNAFULL=/media/hkim/Pipeline/Indel_searcher_2/miniconda2/pkgs/crispresso2-2.0.30-py27h14c3975_0/lib/python2.7/site-packages/CRISPResso2/EDNAFULL
 
 [ ! -d ./Output/${user} ] && { `mkdir ./Output/${user}`; }
 [ ! -d ./Output/${user}/${project} ] && { `mkdir ./Output/${user}/${project}`; }

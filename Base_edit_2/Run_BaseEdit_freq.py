@@ -90,11 +90,11 @@ class clsBaseEditRunner(UserFolderAdmin):
                                                                                                        sample=self.strSample,
                                                                                                        file_name=strFileName)
                 strCmd = ('{python} ./BaseEdit_freq_crispresso.py {forw} {GapO} {GapE} {barcode} {ref} {target_window} {indel_check_pos}'
-                          ' {target_ref_alt} {outdir} {file_name} {PAM_seq} {PAM_pos} {guide_pos} {ednafull} {log}').format(
+                          ' {target_ref_alt} {outdir} {file_name} {PAM_seq} {PAM_pos} {guide_pos} {log}').format(
                         python=self.strPython, forw=strForwardQueryFile, GapO=self.strGapOpen, GapE=self.strGapExtend,
                         barcode=strBarcode, ref=strRef, target_window=self.strTargetWindow, indel_check_pos=self.strIndelCheckPos,
                         target_ref_alt=self.strTargetRefAlt, outdir=self.strOutSampleDir, file_name=strFileName,
-                        PAM_seq=self.strPamSeq, PAM_pos=self.strPamPos, guide_pos=self.strGuidePos, ednafull=self.strEdnafull, log=self.strLogPath)
+                        PAM_seq=self.strPamSeq, PAM_pos=self.strPamPos, guide_pos=self.strGuidePos, log=self.strLogPath)
                 listCmd.append(strCmd)
 
         return listCmd
