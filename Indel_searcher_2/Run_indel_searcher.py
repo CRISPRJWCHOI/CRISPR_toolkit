@@ -335,7 +335,7 @@ def Main():
 
             if setGroup == {'EXP', 'CTRL'}:
                 InstRunner.IndelNormalization()
-            elif setGroup == {} or setGroup == set(['']):
+            elif setGroup in [set(), set([]), set(['']), set([' '])]:
                 pass
             else:
                 logging.error('The group category is not appropriate. : %s' % setGroup)
