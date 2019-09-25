@@ -30,6 +30,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         self.strPamPos         = options.pam_pos  # Barcode target position : Forward (barcode + target), Reverse (target + barcode)
         self.strPickle         = options.pickle
         self.strClassFASTQ     = options.class_fastq
+        self.strSplit          = options.split
         self.strLogPath        = InstInitFolder.strLogPath
 
         self.strBarcodeFile      = os.path.join(self.strRefDir, 'Barcode.txt')
@@ -232,9 +233,9 @@ class clsIndelSearcherRunner(UserFolderAdmin):
 
                         if self.strClassFASTQ == 'True':
                             for strJudge, intFastqKind in [('total', intTotalFastq), ('insertion', intInsFastq), ('deletion', intDelFastq), ('complex', intComFastq)]:
-                                for listFASTQ in listValue[intFastqKind]: ## category
-                                    listFASTQ[0] = listFASTQ[0]+':Barcode_%s:%s' % (strBarcode, strJudge)
-                                    FastqOut.write('\n'.join(listFASTQ) + '\n')
+                                for listFastq in listValue[intFastqKind]: ## category
+                                    listFastqAddClass = [listFastq[0]+':Barcode_%s:%s' % (strBarcode, strJudge)]
+                                    FastqOut.write('\n'.join(listFastqAddClass + listFastq[1:]) + '\n')
 
                     for strBarcode in dictResultIndelFreq: # dictResultIndelFreq [sRef_seq, lQuery, float(iFreq)/iTotal, sTarget_region]
 
@@ -253,9 +254,15 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                     #END:for
                 #END:with
             #END:for
+
             if self.strPickle == 'False':
-                print('Delete tmp pickles')
+                logging.info('Delete tmp pickles')
                 sp.call('rm {outdir}/Tmp/Pickle/*.pickle'.format(outdir=self.strOutSampleDir), shell=True)
+
+            elif self.strSplit == 'False':
+                logging.info('Delete splited input files')
+                sp.call('rm {split_path}/*.fq'.format(split_path=self.strSplitPath), shell=True)
+
         #END:with
     #END:def
 #END:cls
@@ -278,7 +285,9 @@ def Main():
     parser.add_option('--user', dest='user_name', help='The user name with no space')
     parser.add_option('--project', dest='project_name', help='The project name with no space')
     parser.add_option('--pickle', dest='pickle', default='False', help='Dont remove the pickles in the tmp folder : True, False')
+    parser.add_option('--split', dest='split', default='False', help='Dont remove the split files in the input folder : True, False')
     parser.add_option('--classfied_FASTQ', dest='class_fastq', default='True', help='Dont remove the ClassfiedFASTQ in the tmp folder : True, False')
+    parser.add_option('--ednafull', dest='ednafull', help='The nucleotide alignment matrix')
 
     options, args = parser.parse_args()
 
