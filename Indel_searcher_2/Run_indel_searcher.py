@@ -259,7 +259,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                 logging.info('Delete tmp pickles')
                 sp.call('rm {outdir}/Tmp/Pickle/*.pickle'.format(outdir=self.strOutSampleDir), shell=True)
 
-            elif self.strSplit == 'False':
+            if self.strSplit == 'False':
                 logging.info('Delete splited input files')
                 sp.call('rm {split_path}/*.fq'.format(split_path=self.strSplitPath), shell=True)
 
