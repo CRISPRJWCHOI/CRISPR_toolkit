@@ -111,7 +111,7 @@ def Convert_Indelsearcher_output(strSampleRefGroup):
 
 def Main():
     print('Program Start')
-    p = mp.Pool(4)
+    p = mp.Pool(2)
 
     with open('./User/{user}/{project}.txt'.format(user=strUser, project=strProject)) as SampleList:
         listSampleRefGroup = [strSampleRefGroup for strSampleRefGroup in SampleList if strSampleRefGroup[0] != '#']
