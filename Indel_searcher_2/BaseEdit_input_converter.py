@@ -42,8 +42,12 @@ def Convert_Indelsearcher_output():
 
             print('Processing: %s, %s' % (strSample, strRef))
 
-            strBaseEditRefFolder   = '../Base_edit_2/Input/{user}/Reference/{project}'.format(user=strUser, project=strProject)
-            strBaseEditQueryFolder = '../Base_edit_2/Input/{user}/Query/{project}'.format(user=strUser, project=strProject)
+            strBaseEditRefFolder   = '../Base_edit_2/Input/{user}/Reference/{project}/{ref}'.format(user=strUser,
+                                                                                                    project=strProject,
+                                                                                                    ref=strRef)
+            strBaseEditQueryFolder = '../Base_edit_2/Input/{user}/Query/{project}/{sample}'.format(user=strUser,
+                                                                                                   project=strProject,
+                                                                                                   sample=strSample)
 
             Helper.MakeFolderIfNot(strBaseEditRefFolder)
             Helper.MakeFolderIfNot(strBaseEditQueryFolder)
@@ -62,11 +66,16 @@ def Convert_Indelsearcher_output():
                                                                                                                                ref=strRef,
                                                                                                                                project=strProject), 'w') ## conversion target to barcode:refseq
 
-            for sBarcodeIndelSearcher, sReferenceIndelSearcher in zip(BarcodeFile_in_IndelSearcher, ReferenceFile_in_IndelSearcher):
-                sBarcodeIndelSearcher   = sBarcodeIndelSearcher.replace('\n', '').strip()
-                sReferenceIndelSearcher = sReferenceIndelSearcher.replace('\n', '').strip()
-                BarcodeFile_for_BaseEdit.write(sBarcodeIndelSearcher + ':' + sBarcodeIndelSearcher + '\n') ## first is filename, second is barcode. BaseEdit barcode format
-                Reference_for_BaseEdit.write(sBarcodeIndelSearcher + ':' + sReferenceIndelSearcher + '\n')
+            dictBarcodeSeq = {}
+
+            for strBarcodeIndelSearcher, strReferenceIndelSearcher in zip(BarcodeFile_in_IndelSearcher, ReferenceFile_in_IndelSearcher):
+
+                strBarcodeIndelSearcher   = strBarcodeIndelSearcher.replace('\n', '').strip()
+                strReferenceIndelSearcher = strReferenceIndelSearcher.replace('\n', '').strip()
+
+                dictBarcodeSeq[strBarcodeIndelSearcher] = []
+                BarcodeFile_for_BaseEdit.write(strBarcodeIndelSearcher + ':' + strBarcodeIndelSearcher + '\n') ## first is filename, second is barcode. BaseEdit barcode format
+                Reference_for_BaseEdit.write(strBarcodeIndelSearcher + ':' + strReferenceIndelSearcher + '\n')
 
             ReferenceFile_in_IndelSearcher.close()
             BarcodeFile_in_IndelSearcher.close()
@@ -78,25 +87,19 @@ def Convert_Indelsearcher_output():
 
             intCheckTotLine = 0
             intOneLineMore  = 0
-            dictBarcodeSeq  = {}
 
             for i, strRow in enumerate(Total_result_file):  ## for query reads
 
                 if intOneLineMore == 1:
                     intCheckTotLine = 0
-
-                strRow = strRow
+                    intOneLineMore  = 0
 
                 if i % 4 == 0: ## Classified_Indel_barcode has all total sequence.
                     strBarcode = strRow.split('Barcode_')[1].split(':')[0]
                     intCheckTotLine = 1
 
                 elif intCheckTotLine == 1:
-                    try:
-                        dictBarcodeSeq[strBarcode].append(strRow)
-                    except KeyError:
-                        dictBarcodeSeq[strBarcode] = strRow
-
+                    dictBarcodeSeq[strBarcode].append(strRow)
                     intOneLineMore = 1
 
             for strBarcode, listSeq in dictBarcodeSeq.items():
