@@ -14,7 +14,7 @@ class Helper(object):
 
     @staticmethod
     def MakeFolderIfNot(strDir):
-        if not os.path.isdir(strDir): os.mkdir(strDir)
+        if not os.path.isdir(strDir): os.makedirs(strDir)
 
     @staticmethod
     def RemoveNullAndBadKeyword(Sample_list):
@@ -82,6 +82,7 @@ class Helper(object):
         strNucle = re.findall(rec, strSeq)
         if len(strNucle) != len(strSeq):
             logging.error('This sequence is not suitable, check A,C,G,T,N are used only : %s' % strBarcodeFile)
+            set_trace()
             sys.exit(1)
 
 
