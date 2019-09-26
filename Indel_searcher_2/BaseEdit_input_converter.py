@@ -47,9 +47,12 @@ def Convert_Indelsearcher_output(strSampleRefGroup):
     strBaseEditQueryFolder = '../Base_edit_2/Input/{user}/Query/{project}/{sample}'.format(user=strUser,
                                                                                            project=strProject,
                                                                                            sample=strSample)
-
-    Helper.MakeFolderIfNot(strBaseEditRefFolder)
-    Helper.MakeFolderIfNot(strBaseEditQueryFolder)
+    try:
+        Helper.MakeFolderIfNot(strBaseEditRefFolder)
+        Helper.MakeFolderIfNot(strBaseEditQueryFolder)
+    except OSError as e:
+        print(e)
+        pass
 
     ## BaseEdit refer format : filename, barcode, reference
     ReferenceFile_in_IndelSearcher = open('./Input/{user}/Reference/{project}/{ref}/Reference_sequence.txt'.format(user=strUser,
