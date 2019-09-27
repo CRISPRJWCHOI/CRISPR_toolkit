@@ -16,7 +16,7 @@ gap_extend=1 ## default
 ###################################
 
 while read python_path;do
-    python=/media/hkim/Pipeline/Indel_searcher_2/miniconda2/bin/python
+    python=$python_path
 done < ../PythonPath.txt
 
 [ ! -d ./Output/${user} ] && { `mkdir ./Output/${user}`; }
