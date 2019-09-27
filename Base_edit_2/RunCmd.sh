@@ -30,4 +30,4 @@ done < ../PythonPath.txt
 
 $python ./Run_BaseEdit_freq.py --python $python --user $user --project $project -w $target_window --indel_check_pos $indel_check_pos \
                                --target_ref_alt $target_ref_alt --PAM_seq $PAM_seq --PAM_pos $PAM_pos --Guide_pos $Guide_pos \
-                               --gap_open $gap_open --gap_extend $gap_extend #-t $thread > ./Output/${user}/${project}/Log/log.txt 2>&1 &
+                               --gap_open $gap_open --gap_extend $gap_extend -t $thread > ./Output/${user}/${project}/Log/log.txt 2>&1 &
