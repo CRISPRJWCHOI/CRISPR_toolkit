@@ -35,8 +35,8 @@ class clsParameter(object):
             self.strPamSeq          = sys.argv[11]
             self.listPamPos         = sys.argv[12].split('-')
             self.listGuidePos       = sys.argv[13].split('-')
+            self.strEDNAFULL        = os.path.abspath('../EDNAFULL')
             self.strLogPath         = sys.argv[14]
-            self.strEDNAFULL = os.path.abspath('../EDNAFULL')
 
         else:
             sManual = """
@@ -324,7 +324,7 @@ class clsOutputMaker():
 
         self.strForwPath      = InstParameter.strForwPath
         self.strRef           = InstParameter.strRef
-        self.strFileName    = InstParameter.strFileName
+        self.strFileName      = InstParameter.strFileName
         self.strOutputDir     = InstParameter.strOutputDir
         self.listTargetRefAlt = InstParameter.listTargetRefAlt
         self.listTargetWindow = InstParameter.listTargetWindow
@@ -426,14 +426,17 @@ class clsOutputMaker():
                 <----><----------> NGG
                 ACGTACGTACGTACGTACGTGGACG
                 """
+
                 #sRef_target[iPAM_start:iPAM_end] = sPAM_seq
-                iWithout_target_len = len(sRef_target[iBarcode_len:iGuide_start])
+                ## iWithout_target_len = len(sRef_target[iBarcode_len:iGuide_start]) -> weird part.
+                ## So I corrected it.
+                iWithout_target_len = iGuide_start - iBarcode_len
                 lWithout_target_pos = [-(i+1) for i in range(iWithout_target_len)][::-1]
 
                 lWith_target_pos = [i + 1 for i in range(iGuide_len)]
                 lAfter_PAM_pos   = [i + 1 for i in range(len(self.strRef) - iPAM_end + 1)]
 
-                lPos_num = lWithout_target_pos + lWith_target_pos + list(self.strPamSeq) + lAfter_PAM_pos
+                lPos_num           = lWithout_target_pos + lWith_target_pos + list(self.strPamSeq) + lAfter_PAM_pos
                 lPos_annotated_ref = [str(i)+'.'+str(j) for i,j in zip(sRef_target, lPos_num)]
                 ## ['A.-7', 'C.-6', 'A.-5', 'A.-4', 'G.-3', 'C.-2', 'A.-1', 'T.1', 'G.2', 'C.3', 'A.4', 'A.5', 'T.6', 'C.7', 'A.8', 'C.9', 'C.10', 'T.11', 'T.12', 'G.13', 'G.14',
 
