@@ -14,8 +14,4 @@ Fast CRISPR indel search tool
  
  vi ~/.bashrc
  export PATH=$PATH:/path/to/minicodna2/bin
- 
- vi RunCmd.sh
- python=path/to/miniconda2/bin/python2.7
- EDNAFULL=path/to/miniconda2/pkgs/crispresso2-2.0.30-py27h14c3975_0/lib/python2.7/site-packages/CRISPResso2/EDNAFULL
 ```
