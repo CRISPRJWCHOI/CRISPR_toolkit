@@ -7,7 +7,7 @@
 
 user=JaeWoo
 project=JaeWoo_test_samples
-thread=15
+thread=2
 
 
 ####################################
@@ -21,4 +21,4 @@ while read python_path;do
 done < ../PythonPath.txt
 
 
-$python ./Summary_Random_barcode.py -u $user -p $project -t 15
+$python ./Summary_Random_barcode.py -u $user -p $project -t $thread
