@@ -21,4 +21,4 @@ while read python_path;do
 done < ../PythonPath.txt
 
 
-$python ./Summary_Random_barcode.py -u $user -p $project -t $thread
+nohup $python ./Summary_Random_barcode.py -u $user -p $project -t $thread > Random_barcode_log.txt 2>&1 &
