@@ -3,4 +3,4 @@ Fast CRISPR base edit count tool
 
 
 ### Detailed options
-    python2.7 Run_BaseEdit_freq.py -h
+    ./Run_BaseEdit_freq.py -h
