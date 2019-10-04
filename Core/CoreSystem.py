@@ -85,6 +85,12 @@ class Helper(object):
             set_trace()
             sys.exit(1)
 
+    @staticmethod
+    def PreventFromRmMistake(strCmd):
+        rec = re.compile(r'rm.+-rf*.+(\.$|\/$|\*$|User$|Input$|Output$)') ## This reg can prevent . / * ./User User ...
+        if re.findall(rec, strCmd):
+            raise Exception('%s is critical mistake! never do like this.' % strCmd)
+
 
 class InitialFolder(object):
 

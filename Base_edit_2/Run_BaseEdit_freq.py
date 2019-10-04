@@ -14,9 +14,11 @@ class clsBaseEditRunner(UserFolderAdmin):
 
     def __init__(self, strSample, strRef, options, InstInitFolder):
         UserFolderAdmin.__init__(self, strSample, strRef, options, InstInitFolder.strLogPath)
-        self.MakeSampleFolder()
 
         self.strSample        = strSample
+        self._RemoveTmpBeforStart()
+        self.MakeSampleFolder() ## inheritance
+
         self.strRef           = strRef
         self.intCore          = options.multicore
         self.strGapOpen       = options.gap_open
@@ -52,7 +54,7 @@ class clsBaseEditRunner(UserFolderAdmin):
             dictBarcode = {}
 
             for strBarcode in listBarcode:
-                strBarcode = strBarcode.replace('\n','').replace('\r','')
+                strBarcode = strBarcode.replace('\n','').replace('\r','').upper()
                 Helper.CheckIntegrity(self.strBarcodeFile, strBarcode) ## defensive
                 listBarcode   = strBarcode.split(':')
                 strBarSample  = listBarcode[0]
@@ -60,7 +62,7 @@ class clsBaseEditRunner(UserFolderAdmin):
                 dictBarcode[strBarSample] = strBarcode
 
             for strRef in listRef:
-                strRef = strRef.replace('\n','').replace('\r','')
+                strRef = strRef.replace('\n','').replace('\r','').upper()
                 Helper.CheckIntegrity(self.strBarcodeFile, strRef) ## defensive
                 listRef      = strRef.split(':')
                 strRefSample = listRef[0]
@@ -85,10 +87,13 @@ class clsBaseEditRunner(UserFolderAdmin):
                 strBarcode     = listBarcodeRef[1]
                 strRef         = listBarcodeRef[2]
 
+                self._CheckOptionsCorrect(strBarcode) ## defensive
+
                 strForwardQueryFile = './Input/{user}/Query/{project}/{sample}/{file_name}.txt'.format (user=self.strUser,
                                                                                                        project=self.strProject,
                                                                                                        sample=self.strSample,
                                                                                                        file_name=strFileName)
+
                 strCmd = ('{python} ./BaseEdit_freq_crispresso.py {forw} {GapO} {GapE} {barcode} {ref} {target_window} {indel_check_pos}'
                           ' {target_ref_alt} {outdir} {file_name} {PAM_seq} {PAM_pos} {guide_pos} {log}').format(
                         python=self.strPython, forw=strForwardQueryFile, GapO=self.strGapOpen, GapE=self.strGapExtend,
@@ -104,21 +109,76 @@ class clsBaseEditRunner(UserFolderAdmin):
                                                                                      sample=self.strSample, ref_alt=self.strTargetRefAlt)
         sp.call(strCmd, shell=True)
 
+    def CopyToAllResultFolder(self):
+
+        sp.call('cp $(find ./Output/{user}/{project}/*/Result/*Merge* -name "*_Summary.txt") ./Output/{user}/{project}/All_results'.format(
+            user=self.strUser, project=self.strProject), shell=True)
+
+    def _RemoveTmpBeforStart(self):
+        strFolderPath = './Output/{user}/{project}/{sample}'.format(user=self.strUser,
+                                                                    project=self.strProject,
+                                                                    sample=self.strSample)
+
+        if os.path.isdir(strFolderPath):
+            strCmd = 'rm -r %s' % strFolderPath
+
+            Helper.PreventFromRmMistake(strCmd) ## defensive
+
+            logging.info('Delete the %s folder before starting if these were existed.' % self.strSample)
+            sp.call(strCmd.format(user=self.strUser,
+                                  project=self.strProject,
+                                  sample=self.strSample), shell=True)
+
+    ## defensive
+    def _CheckOptionsCorrect(self, strBarcode):
+        intBarcodeLen  = len(strBarcode)
+        intTargetStart = int(self.strTargetWindow.split('-')[0])
+        intTargetEnd   = int(self.strTargetWindow.split('-')[1])
+        intIndelStart  = int(self.strIndelCheckPos.split('-')[0])
+        intIndelEnd    = int(self.strIndelCheckPos.split('-')[1])
+
+        intGuideStart  = int(self.strGuidePos.split('-')[0])
+        intGuideEnd    = int(self.strGuidePos.split('-')[1])
+
+        intPamStart    = int(self.strPamPos.split('-')[0])
+        intPamEnd      = int(self.strPamPos.split('-')[1])
+
+        if intBarcodeLen >= intTargetStart:
+            logging.error('Target window start position must be larger than barcode length')
+            logging.error('Barcode length: %s, Window start: %s' % (intBarcodeLen, intTargetStart))
+            raise Exception
+
+        if intTargetStart > intGuideStart or intTargetEnd < intGuideEnd:
+            logging.error('Target window start, end range must be larger than guide range')
+            logging.error('Target window: %s, Guide window: %s' % (self.strTargetWindow, self.strGuidePos))
+            raise Exception
+
+        if intIndelStart > intGuideEnd or intIndelEnd > intGuideEnd:
+            logging.error('Guide end position must be larger than Indel position')
+            logging.error('Guide end position: %s, Indel position: %s' % (intGuideEnd, self.strIndelCheckPos))
+            raise Exception
+
+        if intPamStart < intGuideEnd or intPamEnd < intGuideEnd:
+            logging.error('PAM position must be larger than Guide end pos')
+            logging.error('PAM position: %s, Guide end position: %s, ' % (self.strPamPos, intGuideEnd))
+            raise Exception
+
 
 def Main():
-    print 'BaseEdit program start: %s' % datetime.now()
+    print('BaseEdit program start: %s' % datetime.now())
 
-    sCmd = "BaseEdit frequency analyzer\n./Run_BaseEdit_freq.py -t 15 -w 16-48 --indel_check_pos 39-40 --target_ref_alt A,T --PAM_seq NGG --PAM_pos 43-45 --Guide_pos 23-42"
-    sCmd += " --gap_open 20 --gap_extend 1 --end_open 20 --end_extend 1\n\n"
-    sCmd += "1: Barcode\n"
-    sCmd += "2: Base target window\n"
-    sCmd += "3: Indel check pos\n"
-    sCmd += "4: PAM pos\n"
-    sCmd += "5: Guide pos (without PAM)\n"
-    sCmd += "TATCTCTATCAGCACACAAGCATGCAATCACCTTGGGTCCAAAGGTCC\n"
-    sCmd += "<------1------><----------------2--------------->\n"
-    sCmd += "                                     <3>  <4>   \n"
-    sCmd += "                      <---------5-------->      \n\n"
+    sCmd = ("BaseEdit frequency analyzer\n\n./Run_BaseEdit_freq.py -t 15 -w 16-48 --indel_check_pos 39-40 --target_ref_alt A,T --PAM_seq NGG --PAM_pos 43-45 --Guide_pos 23-42"
+            " --gap_open -10 --gap_extend 1\n\n"
+            "The sequence position is the one base position (start:1)\n"
+            "1: Barcode\n"
+            "2: Base target window (end pos = PAM pos +3)\n"
+            "3: Indel check pos\n"
+            "4: PAM pos\n"
+            "5: Guide pos (without PAM)\n\n"
+            "TATCTCTATCAGCACACAAGCATGCAATCACCTTGGGTCCAAAGGTCC\n"
+            "<------1------><----------------2--------------->\n"
+            "                                     <3>  <4>   \n"
+            "                      <---------5-------->      \n\n")
 
     parser = OptionParser(sCmd)
 
@@ -134,7 +194,6 @@ def Main():
     parser.add_option('--python', dest='python', help='The python path including the CRISPResso2')
     parser.add_option('--user', dest='user_name', help='The user name with no space')
     parser.add_option('--project', dest='project_name', help='The project name with no space')
-    parser.add_option('--ednafull', dest='ednafull', help='The nucleotide alignment matrix')
 
     options, args = parser.parse_args()
 
@@ -162,6 +221,7 @@ def Main():
 
         @CheckProcessedFiles
         def RunPipeline(**kwargs):
+
             for strSample in listSamples:
                 if strSample[0] == '#': continue
 
@@ -178,12 +238,14 @@ def Main():
 
                 InstBaseEdit.MakeMergeTarget()
 
+            InstBaseEdit.CopyToAllResultFolder()
+
         RunPipeline(InstInitFolder=InstInitFolder,
                     strInputProject=strInputProject,
                     listSamples=listSamples,
                     logging=logging)
 
-    print 'BaseEdit program end: %s' % datetime.now()
+    print('BaseEdit program end: %s' % datetime.now())
 
 
 if __name__ == '__main__':
