@@ -143,6 +143,8 @@ class clsBaseEditRunner(UserFolderAdmin):
         intPamStart    = int(self.strPamPos.split('-')[0])
         intPamEnd      = int(self.strPamPos.split('-')[1])
 
+        intPamLen      = len(self.strPamSeq)
+
         if intBarcodeLen >= intTargetStart:
             logging.error('Target window start position must be larger than barcode length')
             logging.error('Barcode length: %s, Window start: %s' % (intBarcodeLen, intTargetStart))
@@ -153,14 +155,19 @@ class clsBaseEditRunner(UserFolderAdmin):
             logging.error('Target window: %s, Guide window: %s' % (self.strTargetWindow, self.strGuidePos))
             raise Exception
 
-        if intIndelStart > intGuideEnd or intIndelEnd > intGuideEnd:
+        if intIndelStart >= intGuideEnd or intIndelEnd >= intGuideEnd:
             logging.error('Guide end position must be larger than Indel position')
             logging.error('Guide end position: %s, Indel position: %s' % (intGuideEnd, self.strIndelCheckPos))
             raise Exception
 
-        if intPamStart < intGuideEnd or intPamEnd < intGuideEnd:
+        if intPamStart <= intGuideEnd or intPamEnd <= intGuideEnd:
             logging.error('PAM position must be larger than Guide end pos')
             logging.error('PAM position: %s, Guide end position: %s, ' % (self.strPamPos, intGuideEnd))
+            raise Exception
+
+        if (intPamEnd - intPamStart + 1) != intPamLen:
+            logging.error('PAM size and PAM seq must be same length.')
+            logging.error('PAM pos: %s, PAM seq: %s, ' % (self.strPamPos, self.strPamSeq))
             raise Exception
 
 
@@ -215,7 +222,7 @@ def Main():
 
     with open(InstInitFolder.strProjectFile) as Sample_list:
 
-        listSamples        = Helper.RemoveNullAndBadKeyword(Sample_list)
+        listSamples = Helper.RemoveNullAndBadKeyword(Sample_list)
 
         strInputProject = './Input/{user}/Query/{project}'.format(user=options.user_name, project=options.project_name)
 
