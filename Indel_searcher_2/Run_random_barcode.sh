@@ -5,8 +5,8 @@
 ## User parameter ##
 ####################################
 
-user=JaeWoo
-project=JaeWoo_test_samples
+user=SH
+project=p53_screening
 thread=2
 
 
@@ -21,4 +21,4 @@ while read python_path;do
 done < ../PythonPath.txt
 
 
-nohup $python ./Summary_Random_barcode.py -u $user -p $project -t $thread > Random_barcode_log.txt 2>&1 &
+nohup $python ./Summary_Random_barcode.py -u $user -p $project -t $thread > ./Output/${user}/${project}/Log/Random_barcode_log.txt 2>&1 &
