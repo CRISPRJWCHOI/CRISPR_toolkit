@@ -1,7 +1,7 @@
 #!/bin/bash
 
-user=JaeWoo
-project=JaeWoo_test_samples4
+user=SH
+project=24K_screening
 
 
 [ ! -d ./Input ] && { `mkdir ./Input`; }

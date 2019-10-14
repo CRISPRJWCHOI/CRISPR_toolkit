@@ -10,14 +10,22 @@ import logging
 from pdb import set_trace
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S', level=logging.DEBUG)
 
+sys.path.insert(0, os.path.dirname(os.getcwd()))
+from Core.CoreSystem import Helper
+
+
 try:
-    lWindow   = sys.argv[1].split('-')
-    iWinStart = int(lWindow[0])
-    iWinEnd   = int(lWindow[1])
-    iCore     = int(sys.argv[2])
+    strUser    = sys.argv[1]
+    strProject = sys.argv[2]
+    lWindow    = sys.argv[3].split('-')
+    iWinStart  = int(lWindow[0])
+    iWinEnd    = int(lWindow[1])
+    iCore      = int(sys.argv[4])
+
 
 except IndexError:
-    print('\nUsage: ./Sequence_freq.py 25-33 10\nFirst  : a window size for a target sequence\nSecond : a CPU number\n')
+    print('\nUsage: ./Sequence_freq.py SH 24K_screening 25-33 10\n'
+          '         ./Sequence_freq.py user_name project_name window_range thread\n')
     sys.exit()
 
 
@@ -29,14 +37,16 @@ def Count_seq_freq(lPara):
     ACTAGCTATCGCTCACTCTGGGGTCAGGGACAGTGGACTCGAAGGAGAAGCTTGGCGTAACTAGATCTCTACTCTACCACTTGTACTTCAGCGGTCAGCTTACTCGACTTA--A      ACTAGCTATCGCTCACTCTGGGGTCAGGGGCAGTGGACTCGAAGGAGAAGCTTGGCGTAACTAGATCTCTACTCTACCACTTGTACTTCAGCGGTCAGCTTACTCGACTTAATA
     """
 
-    sProject            = lPara[0]
+    strSample           = lPara[0]
     sFile_path          = lPara[1]
     sTotal_readcnt_path = lPara[2]
     dInput_fa           = lPara[3]
-    print ("Count_seq_freq: ", sProject, sFile_path, sTotal_readcnt_path)
+    print ("Count_seq_freq: ", strSample, sFile_path, sTotal_readcnt_path)
 
     try:
-        with open('./Output/%s/Summary/Seq_freq.txt' % sProject, 'w') as Output:
+        with open('./Output/{user}/{project}/{sample}/Result/Seq_freq.txt'.format(user=strUser,
+                                                                                   project=strProject,
+                                                                                   sample=strSample), 'w') as Output:
 
             Output.write('Filename\tSeq\tMotif\tCount\tTotal_cnt\tProportion\tSubstitution\n')
 
@@ -127,16 +137,18 @@ def Count_seq_freq(lPara):
         #END: with
     except Exception as e:
         print(e)
-        print("Error in the input: ", sProject, sFilename, sTotal_readcnt_file)
+        print("Error in the input: ", strSample, sFilename, sTotal_readcnt_file)
         pass
 #END: def
 
 
-def Make_ref_dict(sProject):
+def Make_ref_dict(strRef):
 
     dInput_fa = {}
 
-    with open('./Input/Reference/%s/Reference.fa' % sProject) as Input_ref:
+    with open('./Input/{user}/Reference/{project}/{ref}/Reference.fa'.format(user=strUser,
+                                                                             project=strProject,
+                                                                             ref=strRef)) as Input_ref:
         """
         YSKim_0525+01614_98_repeat1     TATACACGCATGTAT TTTGTATACACGCATGTATGCATCCTGCAGGTCTCGCTCTGACATGTGGGAAAGCTTGGCGTAACTAGATCTCTACTCTACCACTTGTACTTCAGCGGTCAGCTTACTCGACTTAA
 
@@ -345,35 +357,37 @@ def Trim_data():
 def Main():
 
     logging.info('Program Start')
-    #Sum_all_freq() ## deprecated
-    #"""
+
     logging.info('Make commands for a multiple processing')
     lPara = []
-    with open('Project_list.txt') as Project_list:
+    with open('./User/{user}/{project}.txt'.format(user=strUser, project=strProject)) as Project_list:
 
-        for sProject in Project_list:
-            if sProject[0] == '#': continue
-            sProject            = sProject.replace('\n', '').replace('\r', '')
-            sFile_path          = './Output/%s/result' % sProject
-            sTotal_readcnt_path = './Output/%s/Summary/All' % sProject
-            dInput_fa           = Make_ref_dict(sProject)
+        for strSample in Project_list:
+            if strSample[0] == '#': continue
 
-            lPara.append([sProject, sFile_path, sTotal_readcnt_path, dInput_fa])
-    ## single_test
-    #Count_seq_freq(lPara[0])
+            tupSampleInfo = Helper.SplitSampleInfo(strSample)
+            if not tupSampleInfo: continue
+            strSample, strRef, strExpCtrl = tupSampleInfo
+
+            strSample           = strSample.replace('\n', '').replace('\r', '')
+            sFile_path          = './Output/{user}/{project}/{sample}/Tmp/Alignment'.format(user=strUser, project=strProject, sample=strSample)
+            sTotal_readcnt_path = './Output/{user}/{project}/{sample}/Tmp/All'.format(user=strUser, project=strProject, sample=strSample)
+            dInput_fa           = Make_ref_dict(strRef)
+
+            lPara.append([strSample, sFile_path, sTotal_readcnt_path, dInput_fa])
 
     logging.info('Multiple processing Start')
     p = mp.Pool(iCore)
     p.map_async(Count_seq_freq, lPara).get()
     logging.info('Multiple processing End')
-    #"""
-    logging.info('Count group Start')
-    Count_group()
-    logging.info('Count group End')
 
-    logging.info('Trim data Start')
-    Trim_data()
-    logging.info('Trim data End')
+    #logging.info('Count group Start')
+    #Count_group()
+    #logging.info('Count group End')
+
+    #logging.info('Trim data Start')
+    #Trim_data()
+    #logging.info('Trim data End')
 
     logging.info('Program End')
 
