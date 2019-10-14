@@ -18,5 +18,4 @@ while read python_path;do
     python=$python_path
 done < ../PythonPath.txt
 
-$python ./Sequence_freq.py $user $project $window $thread > ./Output/${user}/${project}/Log/Sequence_freq_log.txt 2>&1 &
-
+nohup $python ./Sequence_freq.py $user $project $window $thread > ./Output/${user}/${project}/Log/Sequence_freq_log.txt 2>&1 &
