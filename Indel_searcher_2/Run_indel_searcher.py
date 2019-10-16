@@ -80,11 +80,10 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         self.strPair = 'False'  # FASTQ pair: True, False
 
     def SplitFile(self):
-
+        
         ### Defensive : original fastq wc == split fastq wc
-        #if not os.path.isfile(self.strInputList):
-
-        intTotalLines = len(open(self.strInputFile).readlines())
+        #intTotalLines = len(open(self.strInputFile).readlines())
+        intTotalLines = int(sp.check_output('wc -l {input_file}'.format(input_file=self.strInputFile), shell=True).split()[0])
         intSplitNum   = int(math.ceil(intTotalLines/float(self.intChunkSize)))  ## e.g. 15.4 -> 16
 
         if intSplitNum == 0: intSplitNum = 1
@@ -109,14 +108,14 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                             break
 
         ## defensive
-        strOriginal   = sp.check_output('wc -l {input_file}'.format(input_file=self.strInputFile), shell=True)
+        #strOriginal   = sp.check_output('wc -l {input_file}'.format(input_file=self.strInputFile), shell=True)
         strSplited    = sp.check_output('cat {splited}/*.fq | wc -l'.format(splited=self.strSplitPath), shell=True)
-        strOrigianlWc = strOriginal.split()[0]
-        strSplitedWc  = strSplited.replace('\n','')
+        #strOrigianlWc = strOriginal.split()[0]
+        intSplitedWc  = int(strSplited.replace('\n',''))
 
-        if strOrigianlWc != strSplitedWc:
+        if intTotalLines != intSplitedWc:
             logging.error('The number of total lines of splited file is not corresponded to origial fastq.')
-            logging.error('Original FASTQ line number : %s, Splited FASTQ line number : %s' % (strOrigianlWc, strSplited))
+            logging.error('Original FASTQ line number : %s, Splited FASTQ line number : %s' % (intTotalLines, strSplited))
             sys.exit(1)
 
     def MakeReference(self):
@@ -259,7 +258,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                 logging.info('Delete tmp pickles')
                 sp.call('rm {outdir}/Tmp/Pickle/*.pickle'.format(outdir=self.strOutSampleDir), shell=True)
 
-            if self.strSplit == 'False':
+            elif self.strSplit == 'False':
                 logging.info('Delete splited input files')
                 sp.call('rm {split_path}/*.fq'.format(split_path=self.strSplitPath), shell=True)
 

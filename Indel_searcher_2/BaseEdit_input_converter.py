@@ -9,8 +9,9 @@ from Core.CoreSystem import Helper
 strUser    = sys.argv[1]
 strProject = sys.argv[2]
 
-print('Usage : ./BaseEdit_input_converter.py')
-print('Prerequisite : Project_list.txt')
+print('Usage : python ./BaseEdit_input_converter.py user_name project_name')
+print('Usage : python ./BaseEdit_input_converter.py JaeWoo Test_samples')
+
 
 """
 --> Conversion format
@@ -34,7 +35,7 @@ YSKim_0525+01614_98_repeat1.txt
 
 def Convert_Indelsearcher_output(strSampleRefGroup):
 
-    listSampleRefGroup = strSampleRefGroup.replace('\n', '').split('\t')
+    listSampleRefGroup = strSampleRefGroup.replace('\n', '').replace('\r', '').split('\t')
 
     strSample = listSampleRefGroup[0]
     strRef    = listSampleRefGroup[1]
@@ -114,7 +115,6 @@ def Convert_Indelsearcher_output(strSampleRefGroup):
 
 def Main():
     print('Program Start')
-
     p = mp.Pool(2)
 
     with open('./User/{user}/{project}.txt'.format(user=strUser, project=strProject)) as SampleList:
