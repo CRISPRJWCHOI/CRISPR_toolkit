@@ -3,7 +3,7 @@ Fast CRISPR indel search tool
 
 ### Prerequisites to run
 ```
- install the miniconda2
+ # install the miniconda2.
  https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh
 
  # Run the conda package manager.
