@@ -14,4 +14,24 @@ Fast CRISPR indel search tool
  
  vi ~/.bashrc
  export PATH=$PATH:/path/to/minicodna2/bin
+
+ vi Make_user_folder.sh
+ Modify the user name and project name
+ 
+ user=JaeWoo
+ project=JaeWoo_test_samples
+ 
+ ./Make_user_folder.sh
+
+
+ vi Run_cmd.sh
+ Modify the parameters. The user and project name must be same that used in the Make_user_folder.sh
+ 
+ user=JaeWoo
+ project=JaeWoo_test_samples
+ pam_type=Cas9
+ pam_pos=Forward
+ thread=15
+
+ ./Run_cmd.sh
 ```
