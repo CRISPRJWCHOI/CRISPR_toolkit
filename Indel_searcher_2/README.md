@@ -22,7 +22,7 @@ Fast CRISPR indel search tool
  ./Make_user_folder.sh
 
  vi Run_cmd.sh
- # Modify the parameters. The user and project name must be same that used in the 'Make_user_folder.sh'.
+ # Modify the parameters. The user and project name must be the same as that used in the 'Make_user_folder.sh'.
  user=JaeWoo
  project=JaeWoo_test_samples
  pam_type=Cas9
