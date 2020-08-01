@@ -217,7 +217,7 @@ def Main():
 
     logging.info('Program start')
     if options.multicore > 15:
-        logging.warning('Optimal treads <= 15')
+        logging.warning('Optimal threads <= 15')
     logging.info(str(options))
 
     with open(InstInitFolder.strProjectFile) as Sample_list:
